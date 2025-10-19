@@ -1,0 +1,15 @@
+{
+  "name": "CVison-AI",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "concurrently \"npm --prefix packages/frontend run dev\" \"npm --prefix packages/backend run dev\"",
+    "install:all": "npm install --workspaces"
+  },
+  "devDependencies": {
+    "concurrently": "^9.0.0"
+  }
+}
