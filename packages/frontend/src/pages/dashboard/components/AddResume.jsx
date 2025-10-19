@@ -26,13 +26,11 @@ function AddResume() {
     const data = {
       data: {
         title: resumetitle,
-        themeColor: "#000000",
+        themeColor: "#007BFF", // Updated primary color
       },
     };
-    console.log(`Creating Resume ${resumetitle}`);
     createNewResume(data)
       .then((res) => {
-        console.log("Prinitng From AddResume Respnse of Create Resume", res);
         Navigate(`/dashboard/edit-resume/${res.data.resume._id}`);
       })
       .finally(() => {
@@ -43,23 +41,23 @@ function AddResume() {
   return (
     <>
       <div
-        className="p-14 py-24 flex items-center justify-center border-2 bg-secondary rounded-lg h-[380px] hover:scale-105 transition-all duration-400 cursor-pointer hover:shadow-md transform-gpu"
+        className="p-14 py-24 flex items-center justify-center border-2 bg-secondary rounded-lg h-[380px] hover:scale-105 transition-all duration-400 cursor-pointer hover:shadow-md"
         onClick={() => setOpenDialog(true)}
       >
-        <CopyPlus className="transition-transform duration-300" />
+        <CopyPlus />
       </div>
       <Dialog open={isDialogOpen}>
         <DialogContent setOpenDialog={setOpenDialog}>
           <DialogHeader>
             <DialogTitle>Create a New Resume</DialogTitle>
             <DialogDescription>
-              Add a title and Description to your new resume
+              Add a title for your new resume.
               <Input
                 className="my-3"
                 type="text"
-                placeholder="Ex: Backend Resume"
+                placeholder="Ex: Backend Developer Resume"
                 value={resumetitle}
-                onChange={(e) => setResumetitle(e.target.value.trimStart())}
+                onChange={(e) => setResumetitle(e.target.value)}
               />
             </DialogDescription>
             <div className="gap-2 flex justify-end">
@@ -70,7 +68,7 @@ function AddResume() {
                 {loading ? (
                   <Loader className=" animate-spin" />
                 ) : (
-                  "Create Resume"
+                  "Create"
                 )}
               </Button>
             </div>

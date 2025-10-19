@@ -1,31 +1,31 @@
-import React, { useEffect } from "react";
+import React from "react";
 import { useSelector } from "react-redux";
-import PersonalDeatailPreview from "./preview-components/PersonalDeatailPreview";
-import SummeryPreview from "./preview-components/SummaryPreview";
-import ExperiencePreview from "./preview-components/ExperiencePreview";
-import EducationalPreview from "./preview-components/EducationalPreview";
-import SkillsPreview from "./preview-components/SkillsPreview";
-import ProjectPreview from "./preview-components/ProjectPreview";
+import ProfessionalTemplate from "@/components/templates/ProfessionalTemplate";
+import MinimalistTemplate from "@/components/templates/MinimalistTemplate";
+import CreativeTemplate from "@/components/templates/CreativeTemplate";
 
-function PreviewPage() {
+function PreviewPage({ selectedTemplate }) {
   const resumeData = useSelector((state) => state.editResume.resumeData);
-  useEffect(() => {
-    console.log("PreviewPage rendered ");
-  }, [resumeData]);
+
+  const renderTemplate = () => {
+    if (!resumeData) {
+      return null;
+    }
+    switch (selectedTemplate) {
+      case "professional":
+        return <ProfessionalTemplate resumeData={resumeData} />;
+      case "minimalist":
+        return <MinimalistTemplate resumeData={resumeData} />;
+      case "creative":
+        return <CreativeTemplate resumeData={resumeData} />;
+      default:
+        return <ProfessionalTemplate resumeData={resumeData} />;
+    }
+  };
+
   return (
-    <div
-      className={`shadow-lg h-full p-14 border-t-[20px]`}
-      style={{
-        borderColor: resumeData?.themeColor ? resumeData.themeColor : "#000000",
-      }}
-    >
-      <PersonalDeatailPreview resumeInfo={resumeData} />
-      {}
-      <SummeryPreview resumeInfo={resumeData} />
-      {resumeData?.experience && <ExperiencePreview resumeInfo={resumeData} />}
-      {resumeData?.projects && <ProjectPreview resumeInfo={resumeData} />}
-      {resumeData?.education && <EducationalPreview resumeInfo={resumeData} />}
-      {resumeData?.skills && <SkillsPreview resumeInfo={resumeData} />}
+    <div className="shadow-lg h-full p-4 border">
+      {renderTemplate()}
     </div>
   );
 }

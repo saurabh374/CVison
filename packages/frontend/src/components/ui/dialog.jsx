@@ -23,6 +23,7 @@ const DialogOverlay = React.forwardRef(({ className, ...props }, ref) => (
   />
 ));
 DialogOverlay.displayName = DialogPrimitive.Overlay.displayName;
+
 const DialogContent = React.forwardRef(
   ({ setOpenDialog, className, children, ...props }, ref) => (
     <DialogPortal>
@@ -40,7 +41,7 @@ const DialogContent = React.forwardRef(
           <X
             className="h-4 w-4"
             onClick={() => {
-              setOpenDialog(false);
+              if (setOpenDialog) setOpenDialog(false);
             }}
           />
           <span className="sr-only">Close</span>
