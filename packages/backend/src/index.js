@@ -3,8 +3,13 @@ import { connectDB } from "./db/index.js";
 import { config } from "dotenv";
 config();
 
-connectDB().then(() => {
-  app.listen(process.env.PORT, () => {
-    console.log("Server is running on http://localhost:" + process.env.PORT);
+connectDB()
+  .then(() => {
+    app.listen(process.env.PORT, () => {
+      console.log("Server is running on http://localhost:" + process.env.PORT);
+    });
+  })
+  .catch((err) => {
+    console.error("Failed to connect to the database:", err);
+    process.exit(1);
   });
-});
