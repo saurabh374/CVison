@@ -1,17 +1,36 @@
-from playwright.sync_api import sync_playwright
+from playwright.sync_api import sync_playwright, expect
 
-def run():
-    with sync_playwright() as p:
-        browser = p.chromium.launch()
-        page = browser.new_page()
-        page.goto("http://localhost:5173/auth/sign-in")
-        page.click("text=Sign Up")
-        page.fill("input[name='fullname']", "Test User")
-        page.fill("input[name='email']", "test@example.com")
-        page.fill("input[name='password']", "password")
-        page.click("text=Register User")
-        page.wait_for_url("http://localhost:5173/dashboard")
-        page.screenshot(path="jules-scratch/verification/dashboard_empty.png")
-        browser.close()
+def run(playwright):
+    browser = playwright.chromium.launch(headless=True)
+    context = browser.new_context()
+    page = context.new_page()
 
-run()
+    # Navigate to the register page
+    page.goto("http://localhost:5173/register")
+
+    # Fill in the registration form
+    page.get_by_label("Username").fill("testuser")
+    page.get_by_label("Password").fill("password")
+    page.get_by_role("button", name="Register").click()
+
+    # Wait for the success message
+    expect(page.get_by_text("Registration successful! Please login.")).to_be_visible()
+
+    # Navigate to the login page
+    page.goto("http://localhost:5173/login")
+
+    # Fill in the login form
+    page.get_by_label("Username").fill("testuser")
+    page.get_by_label("Password").fill("password")
+    page.get_by_role("button", name="Login").click()
+
+    # Wait for navigation to the dashboard
+    page.wait_for_url("http://localhost:5173/dashboard")
+
+    # Take a screenshot of the dashboard
+    page.screenshot(path="jules-scratch/verification/dashboard.png")
+
+    browser.close()
+
+with sync_playwright() as playwright:
+    run(playwright)
