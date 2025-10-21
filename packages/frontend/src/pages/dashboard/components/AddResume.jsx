@@ -1,84 +1,97 @@
-import React from "react";
-import { useState } from "react";
-import { CopyPlus, Loader } from "lucide-react";
+import React, { useState } from "react";
+import { CopyPlus, Loader2 } from "lucide-react";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
+  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { createNewResume } from "@/Services/resumeAPI";
 import { useNavigate } from "react-router-dom";
+import { toast } from "sonner"; // ✅ using your existing Toaster setup
 
-function AddResume() {
-  const [isDialogOpen, setOpenDialog] = useState(false);
-  const [resumetitle, setResumetitle] = useState("");
+export default function AddResume() {
+  const [open, setOpen] = useState(false);
+  const [title, setTitle] = useState("");
   const [loading, setLoading] = useState(false);
-  const Navigate = useNavigate();
+  const navigate = useNavigate();
 
-  const createResume = async () => {
-    setLoading(true);
-    if (resumetitle === "")
-      return console.log("Please add a title to your resume");
-    const data = {
-      data: {
-        title: resumetitle,
-        themeColor: "#000000",
-      },
-    };
-    console.log(`Creating Resume ${resumetitle}`);
-    createNewResume(data)
-      .then((res) => {
-        console.log("Prinitng From AddResume Respnse of Create Resume", res);
-        Navigate(`/dashboard/edit-resume/${res.data.resume._id}`);
-      })
-      .finally(() => {
-        setLoading(false);
-        setResumetitle("");
-      });
+  const handleCreateResume = async () => {
+    if (!title.trim()) {
+      toast.error("Please enter a title for your resume");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const payload = {
+        data: {
+          title: title.trim(),
+          themeColor: "#000000",
+        },
+      };
+
+      const res = await createNewResume(payload);
+      console.log("Resume created:", res);
+
+      const newId = res?.data?.resume?._id;
+      if (newId) {
+        toast.success("Resume created successfully!");
+        setOpen(false);
+        setTitle("");
+        navigate(`/dashboard/edit-resume/${newId}`);
+      } else {
+        throw new Error("Invalid response: missing resume ID");
+      }
+    } catch (error) {
+      console.error("Error creating resume:", error);
+      toast.error("Failed to create resume. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
+
   return (
-    <>
-      <div
-        className="p-14 py-24 flex items-center justify-center border-2 bg-secondary rounded-lg h-[380px] hover:scale-105 transition-all duration-400 cursor-pointer hover:shadow-md transform-gpu"
-        onClick={() => setOpenDialog(true)}
-      >
-        <CopyPlus className="transition-transform duration-300" />
-      </div>
-      <Dialog open={isDialogOpen}>
-        <DialogContent setOpenDialog={setOpenDialog}>
-          <DialogHeader>
-            <DialogTitle>Create a New Resume</DialogTitle>
-            <DialogDescription>
-              Add a title and Description to your new resume
-              <Input
-                className="my-3"
-                type="text"
-                placeholder="Ex: Backend Resume"
-                value={resumetitle}
-                onChange={(e) => setResumetitle(e.target.value.trimStart())}
-              />
-            </DialogDescription>
-            <div className="gap-2 flex justify-end">
-              <Button variant="ghost" onClick={() => setOpenDialog(false)}>
-                Cancel
-              </Button>
-              <Button onClick={createResume} disabled={!resumetitle || loading}>
-                {loading ? (
-                  <Loader className=" animate-spin" />
-                ) : (
-                  "Create Resume"
-                )}
-              </Button>
-            </div>
-          </DialogHeader>
-        </DialogContent>
-      </Dialog>
-    </>
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <div
+          className="p-6 flex flex-col items-center justify-center bg-gradient-to-br from-indigo-50 to-purple-50 border border-indigo-100 rounded-2xl shadow-sm hover:shadow-md hover:scale-105 transition-all cursor-pointer min-h-[180px]"
+        >
+          <CopyPlus className="w-8 h-8 text-indigo-600 mb-2" />
+          <p className="text-sm font-semibold text-indigo-700">Add New Resume</p>
+        </div>
+      </DialogTrigger>
+
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Create a New Resume</DialogTitle>
+          <DialogDescription className="text-sm text-gray-500">
+            Enter a title for your new resume. You can edit all details later.
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="mt-4 space-y-3">
+          <Input
+            placeholder="e.g., Backend Engineer Resume"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            disabled={loading}
+          />
+
+          <div className="flex justify-end gap-2 pt-2">
+            <Button variant="ghost" onClick={() => setOpen(false)} disabled={loading}>
+              Cancel
+            </Button>
+            <Button onClick={handleCreateResume} disabled={!title.trim() || loading}>
+              {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Create"}
+            </Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }
-
-export default AddResume;

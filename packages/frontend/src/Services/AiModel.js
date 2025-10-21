@@ -1,10 +1,7 @@
-import { Gem } from "lucide-react";
-import { GEMENI_API_KEY } from "../config/config";
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import { GEMENI_API_KEY } from "../config/config";
 
-
-const apiKey = GEMENI_API_KEY;
-const genAI = new GoogleGenerativeAI(apiKey);
+const genAI = new GoogleGenerativeAI(GEMENI_API_KEY);
 
 const model = genAI.getGenerativeModel({
   model: "gemini-1.5-flash",
@@ -18,9 +15,14 @@ const generationConfig = {
   responseMimeType: "application/json",
 };
 
-export const AIChatSession = model.startChat({
-  generationConfig,
-  // safetySettings: Adjust safety settings
-  // See https://ai.google.dev/gemini-api/docs/safety-settings
-  history: [],
-});
+export async function sendAIMessage(prompt) {
+  try {
+    const result = await model.generateContent(prompt, generationConfig);
+    const response = await result.response;
+    const text = await response.text();
+    return text;
+  } catch (error) {
+    console.error("AI API error:", error);
+    throw error;
+  }
+}

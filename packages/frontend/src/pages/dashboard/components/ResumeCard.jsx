@@ -1,5 +1,10 @@
-import { FaEye, FaEdit, FaTrashAlt, FaBook, FaSpinner } from "react-icons/fa";
 import React from "react";
+import {
+  FaEye,
+  FaEdit,
+  FaTrashAlt,
+  FaSpinner,
+} from "react-icons/fa";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -15,93 +20,113 @@ import { deleteThisResume } from "@/Services/resumeAPI";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 
+/* Subtle gradient frames for variety */
 const gradients = [
-  "from-indigo-500 via-purple-500 to-pink-500",
-  "from-green-400 via-blue-500 to-purple-600",
-  "from-red-400 via-yellow-500 to-green-500",
-  "from-blue-500 via-teal-400 to-green-300",
-  "from-pink-500 via-red-500 to-yellow-500",
+  "from-indigo-100 to-purple-100",
+  "from-blue-100 to-teal-100",
+  "from-pink-100 to-rose-100",
+  "from-green-100 to-emerald-100",
+  "from-yellow-100 to-orange-100",
 ];
 
-const getRandomGradient = () => {
-  return gradients[Math.floor(Math.random() * gradients.length)];
-};
+const getRandomGradient = () =>
+  gradients[Math.floor(Math.random() * gradients.length)];
 
-function ResumeCard({ resume, refreshData }) {
+export default function ResumeCard({ resume, refreshData }) {
   const [loading, setLoading] = React.useState(false);
   const [openAlert, setOpenAlert] = React.useState(false);
-  const gradient = getRandomGradient();
   const navigate = useNavigate();
+  const gradient = React.useMemo(() => getRandomGradient(), []);
 
   const handleDelete = async () => {
     setLoading(true);
-    console.log("Delete Resume with ID", resume._id);
     try {
-      const response = await deleteThisResume(resume._id);
+      await deleteThisResume(resume._id);
+      toast.success("Resume deleted successfully!");
+      refreshData();
     } catch (error) {
-      console.error("Error deleting resume:", error.message);
-      toast(error.message);
+      console.error("Error deleting resume:", error);
+      toast.error(error?.message || "Failed to delete resume");
     } finally {
       setLoading(false);
       setOpenAlert(false);
-      refreshData();
     }
   };
+
   return (
     <div
-      className={`p-5 bg-gradient-to-r ${gradient} h-[380px] sm:h-auto rounded-lg flex flex-col justify-between shadow-lg transition duration-300 ease-in-out cursor-pointer hover:shadow-xl`}
+      className={`group relative bg-gradient-to-br ${gradient} rounded-2xl p-[1px] shadow-sm hover:shadow-md transition-all`}
     >
-      <div className="flex items-center justify-center p-6 bg-white rounded-t-lg shadow-md">
-        <h2
-          className={`text-center font-bold text-md mx-2 bg-clip-text text-transparent bg-gradient-to-r ${gradient}`}
-        >
-          {resume.title}
-        </h2>
+      <div className="bg-white rounded-2xl flex flex-col justify-between h-[200px]">
+        {/* Title */}
+        <div className="p-4 flex-1 flex items-center justify-center text-center">
+          <h2 className="font-semibold text-gray-800 text-lg leading-tight line-clamp-2">
+            {resume?.title || "Untitled Resume"}
+          </h2>
+        </div>
+
+        {/* Action Buttons */}
+        <div className="flex items-center justify-around py-3 border-t border-gray-100 bg-gray-50 rounded-b-2xl">
+          <IconButton
+            icon={<FaEye />}
+            label="View"
+            onClick={() => navigate(`/dashboard/view-resume/${resume._id}`)}
+          />
+          <IconButton
+            icon={<FaEdit />}
+            label="Edit"
+            onClick={() => navigate(`/dashboard/edit-resume/${resume._id}`)}
+          />
+          <IconButton
+            icon={<FaTrashAlt />}
+            label="Delete"
+            onClick={() => setOpenAlert(true)}
+            color="text-red-600 hover:text-red-700"
+          />
+        </div>
       </div>
-      <div className="flex items-center justify-around p-4 bg-white rounded-b-lg shadow-md">
-        <Button
-          variant="ghost"
-          onClick={() => navigate(`/dashboard/view-resume/${resume._id}`)}
-          className="mx-2"
-        >
-          <FaEye className="text-gray-600 hover:text-indigo-600 transition duration-300 ease-in-out" />
-        </Button>
-        <Button
-          variant="ghost"
-          onClick={() => navigate(`/dashboard/edit-resume/${resume._id}`)}
-          className="mx-2"
-        >
-          <FaEdit className="text-gray-600 hover:text-purple-600 transition duration-300 ease-in-out" />
-        </Button>
-        <Button
-          variant="ghost"
-          onClick={() => setOpenAlert(true)}
-          className="mx-2"
-        >
-          <FaTrashAlt className="text-gray-600 hover:text-pink-600 transition duration-300 ease-in-out" />
-        </Button>
-        <AlertDialog open={openAlert} onClose={() => setOpenAlert(false)}>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-              <AlertDialogDescription>
-                This action cannot be undone. This will permanently delete your
-                Resume and remove your data from our servers.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel onClick={() => setOpenAlert(false)}>
-                Cancel
-              </AlertDialogCancel>
-              <AlertDialogAction onClick={handleDelete} disabled={loading}>
-                {loading ? <FaSpinner className="animate-spin" /> : "Delete"}
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
-      </div>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={openAlert} onOpenChange={setOpenAlert}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete this resume?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. It will permanently remove your
+              resume from the system.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={loading}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDelete}
+              disabled={loading}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              {loading ? (
+                <FaSpinner className="animate-spin w-4 h-4 mx-auto" />
+              ) : (
+                "Delete"
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
 
-export default ResumeCard;
+/* ---------- Small Reusable Button ---------- */
+function IconButton({ icon, label, onClick, color = "text-gray-600 hover:text-indigo-600" }) {
+  return (
+    <Button
+      variant="ghost"
+      size="icon"
+      onClick={onClick}
+      aria-label={label}
+      className="transition-all hover:scale-110"
+    >
+      <span className={`text-lg ${color}`}>{icon}</span>
+    </Button>
+  );
+}

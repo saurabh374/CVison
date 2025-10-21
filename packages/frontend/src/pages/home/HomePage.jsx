@@ -1,146 +1,181 @@
+import React, { useEffect, useMemo } from "react";
 import Header from "@/components/custom/Header.jsx";
-import React, { useEffect } from "react";
 import heroSnapshot from "@/assets/heroSnapshot.png";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { FaGithub, FaCircle, FaInfoCircle } from "react-icons/fa";
 import { Button } from "@/components/ui/button.jsx";
-import { startUser } from "../../Services/login.js";
-import { useDispatch, useSelector } from "react-redux";
-import { addUserData } from "@/features/user/userFeatures.js";
+import { useSelector } from "react-redux";
+import PropTypes from "prop-types";
 
-function HomePage() {
-  const user = useSelector((state) => state.editUser.userData);
+/**
+ * Polished HomePage
+ * - Improved accessibility (semantic landmarks, aria labels)
+ * - Reduced motion respect
+ * - Better hero image handling + low-impact hover transform
+ * - Feature list memoized and keyboard-friendly
+ * - Clear CTA behaviour and small UX polish
+ */
+export default function HomePage() {
   const navigate = useNavigate();
-  const dispatch = useDispatch();
-  const handleClick = () => {
-    window.open(
-      "https://github.com/sahidrajaansari/Ai-Resume-Builder",
-      "_blank"
-    );
-  };
+  const user = useSelector((state) => state.editUser?.userData ?? null);
+  const location = useLocation();
 
-  useEffect(() => {
-    const fetchResponse = async () => {
-      try {
-        const response = await startUser();
-        if (response.statusCode == 200) {
-          dispatch(addUserData(response.data));
-        } else {
-          dispatch(addUserData(""));
-        }
-      } catch (error) {
-        console.log(
-          "Printing from Home Page there was a error ->",
-          error.message
-        );
-        dispatch(addUserData(""));
-      }
-    };
-    fetchResponse();
+  // Respect prefers-reduced-motion — avoid large transforms if user asks
+  const prefersReducedMotion = useMemo(() => {
+    try {
+      return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    } catch (e) {
+      return false;
+    }
   }, []);
 
-  const hadnleGetStartedClick = () => {
-    if (user) {
-      console.log("Printing from Homepage User is There ");
-      navigate("/dashboard");
-    } else {
-      console.log("Printing for Homepage User Not Found");
-      navigate("/auth/sign-in");
+  useEffect(() => {
+    if (location.hash) {
+      const id = location.hash.replace("#", "");
+      const el = document.getElementById(id);
+      if (el) {
+        // small timeout to allow layout to settle
+        setTimeout(() => {
+          el.scrollIntoView({ behavior: "smooth", block: "start" });
+          // focus target for keyboard users
+          el.tabIndex = -1;
+          el.focus({ preventScroll: true });
+        }, 50);
+      }
     }
+  }, [location]);
+
+  const openGithub = () => {
+    window.open("https://github.com/saurabh374/CVison", "_blank", "noopener,noreferrer");
   };
+
+  const handlePrimary = () => {
+    if (user && user !== "") navigate("/dashboard");
+    else navigate("/auth/sign-in");
+  };
+
+  const features = useMemo(
+    () => [
+      { title: "Save time", desc: "Generate polished resumes in minutes with smart suggestions." },
+      { title: "ATS friendly", desc: "Templates optimized for applicant tracking systems." },
+      { title: "Export & share", desc: "PDF exports, shareable links, and version history." },
+    ],
+    []
+  );
+
   return (
-    <>
-      <Header user={user} />
-      <section className="pt-24 pb-20 bg-white">
-        <div className="px-12 mx-auto max-w-7xl">
-          <div className="w-full mx-auto text-left md:w-11/12 xl:w-9/12 md:text-center">
-            <h1 className="mb-8 text-4xl font-extrabold leading-none tracking-normal text-gray-900 md:text-6xl md:tracking-tight">
-              <span>Start</span>{" "}
-              <span className="block w-full py-2 text-transparent bg-clip-text leading-12 bg-gradient-to-r from-green-400 to-purple-500 lg:inline">
-                building a Resume
-              </span>{" "}
-              <span>for your next Job</span>
-            </h1>
-            <p className="px-0 mb-8 text-lg text-gray-600 md:text-xl lg:px-24">
-              Build. Refine. Shine. With AI-Driven Resumes
-            </p>
-            <div className="mb-4 space-x-0 md:space-x-2 md:mb-8">
-              <a
-                className="inline-flex items-center justify-center w-full px-6 py-3 mb-2 text-lg text-white bg-green-400 rounded-2xl sm:w-auto sm:mb-0 hover:cursor-pointer"
-                onClick={hadnleGetStartedClick}
-              >
-                Get Started
-                <svg
-                  className="w-4 h-4 ml-1"
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z"
-                    clipRule="evenodd"
-                  ></path>
-                </svg>
-              </a>
-              <a
-                onClick={handleClick}
-                className="inline-flex items-center justify-center w-full px-6 py-3 mb-2 text-lg bg-gray-100 rounded-2xl sm:w-auto sm:mb-0 cursor-pointer"
-              >
-                Learn More
-                <svg
-                  className="w-4 h-4 ml-1"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
-                  ></path>
-                </svg>
-              </a>
-            </div>
-          </div>
-          <div className="w-full mx-auto mt-20 text-center md:w-10/12">
-            <div className="relative z-0 w-full mt-8">
-              <div className="relative overflow-hidden shadow-2xl">
-                <div className="flex items-center justify-between px-4 bg-gradient-to-r from-green-400 to-purple-500 h-11 rounded-t-xl">
-                  <div className="flex space-x-1.5">
-                    <FaCircle className="w-3 h-3 text-white hover:text-gray-300 transition duration-300 transform hover:scale-125" />
-                    <FaCircle className="w-3 h-3 text-white hover:text-gray-300 transition duration-300 transform hover:scale-125" />
-                    <FaCircle className="w-3 h-3 text-white hover:text-gray-300 transition duration-300 transform hover:scale-125" />
-                  </div>
-                  <FaInfoCircle className="text-white hover:text-gray-300 transition duration-300 transform hover:rotate-45" />
+    <div className="min-h-screen bg-white text-gray-900">
+      <main>
+        <section className="pt-24 pb-12">
+          <div className="max-w-7xl mx-auto px-6 lg:px-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 items-center gap-12">
+              {/* HERO TEXT */}
+              <div className="space-y-6">
+                <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight leading-tight">
+                  Build{' '}
+                  <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-purple-500">
+                    AI-powered
+                  </span>{' '}
+                  resumes that get noticed
+                </h1>
+
+                <p className="text-lg text-gray-600 max-w-2xl">
+                  Turn your experience into an interview-winning resume in minutes. Smart templates,
+                  clarity suggestions, and one-click exports — everything a modern job-seeker needs.
+                </p>
+
+                <div className="flex flex-col sm:flex-row sm:items-center sm:gap-4 gap-3">
+                  <Button
+                    onClick={handlePrimary}
+                    className="rounded-2xl px-6 py-3"
+                    aria-label="Get started — create your resume"
+                  >
+                    Get started
+                  </Button>
+
+                  <Button
+                    variant="ghost"
+                    onClick={openGithub}
+                    className="rounded-2xl px-6 py-3 flex items-center"
+                    aria-label="Star CVison on GitHub"
+                  >
+                    <FaGithub className="w-4 h-4 mr-2" aria-hidden />
+                    Star on GitHub
+                  </Button>
                 </div>
-                <img
-                  className="object-cover py-2 px-4 rounded-b-lg transition duration-300 transform hover:scale-105"
-                  src={heroSnapshot}
-                  alt="Dashboard"
-                />
+
+                <div className="mt-2 text-sm text-gray-500 flex items-center gap-4">
+                  <div className="inline-flex items-center gap-2">
+                    <FaInfoCircle className="w-4 h-4 text-gray-400" aria-hidden />
+                    <span>30+ templates · export PDF · ATS friendly</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* HERO VISUAL */}
+              <div className="mx-auto w-full max-w-2xl">
+                <figure className="rounded-2xl overflow-hidden shadow-xl ring-1 ring-black ring-opacity-5 bg-white">
+                  <div className="flex items-center justify-between px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-500">
+                    <div className="flex items-center gap-2">
+                      <FaCircle className="w-3 h-3 text-white opacity-90" aria-hidden />
+                      <FaCircle className="w-3 h-3 text-white opacity-80" aria-hidden />
+                      <FaCircle className="w-3 h-3 text-white opacity-70" aria-hidden />
+                    </div>
+                    <FaInfoCircle className="text-white opacity-90" aria-hidden />
+                  </div>
+
+                  {/* Use <picture> to allow future responsive sources; keep a native img fallback */}
+                  <picture>
+                    {/* example: you can add srcSet/webp variants here later */}
+                    <img
+                      src={heroSnapshot}
+                      alt="Preview of CVison resume builder — dashboard with templates and suggestions"
+                      className={`w-full h-64 object-cover sm:h-80 md:h-96 transition-transform duration-300 ${prefersReducedMotion ? '' : 'hover:scale-105'
+                        }`}
+                      loading="lazy"
+                      width="1200"
+                      height="700"
+                    />
+                  </picture>
+                </figure>
+
+                {/* small feature chips */}
+                <div className="mt-4 flex flex-wrap gap-2" aria-hidden>
+                  <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-gray-100 text-sm text-gray-700">ATS-ready</span>
+                  <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-gray-100 text-sm text-gray-700">Custom templates</span>
+                  <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-gray-100 text-sm text-gray-700">One-click export</span>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      </section>
-      <footer className="bg-white" aria-labelledby="footer-heading">
-        <div className="mt-16 border-t border-gray-900/10 pt-8 sm:mt-20 lg:mt-24 p-5 flex justify-between">
-          <p className="text-xs leading-5 text-gray-500">
-            &copy; 2024 Ai-Resume-Builder. All rights reserved.
-          </p>
-          <div>
-            <Button variant="secondary" onClick={handleClick}>
-              <FaGithub className="w-4 h-4 mr-1" />
-              GitHub
-            </Button>
+        </section>
+
+        <section className="bg-gray-50 py-12" aria-labelledby="why-choose">
+          <div className="max-w-7xl mx-auto px-6 lg:px-8">
+            <h2 id="why-choose" className="text-2xl font-bold text-gray-900 mb-6">Why choose AI Resume Builder?</h2>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {features.map((f) => (
+                <Feature key={f.title} title={f.title} desc={f.desc} />
+              ))}
+            </div>
           </div>
-        </div>
-      </footer>
-    </>
+        </section>
+      </main>
+    </div>
   );
 }
 
-export default HomePage;
+function Feature({ title, desc }) {
+  return (
+    <article className="rounded-lg bg-white p-6 shadow-sm" tabIndex={0} aria-labelledby={`feature-${title}`}>
+      <h3 id={`feature-${title}`} className="text-lg font-semibold text-gray-900 mb-2">{title}</h3>
+      <p className="text-sm text-gray-600">{desc}</p>
+    </article>
+  );
+}
+
+Feature.propTypes = {
+  title: PropTypes.string.isRequired,
+  desc: PropTypes.string.isRequired,
+};
